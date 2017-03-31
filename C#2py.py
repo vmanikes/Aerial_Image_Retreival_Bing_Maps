@@ -25,7 +25,7 @@ def clip(n,minValue,maxValue):
     returns The map width and height in pixels.
 '''
 def mapSize(levelOfDetail):
-    pass
+    return 256 << levelOfDetail
 
 '''
     Determines the ground resolution (in meters per pixel) at a specified latitude and level of detail.
@@ -125,21 +125,51 @@ def tileXY2PixelXY(tileX,tileY):
     returns a string containing the quad key
 '''
 def tileXY2QuadKey(tileX,tileY,levelOfDetail):
-    pass
+    quadKey = []
+    i = levelOfDetail
+    while i > 0:
+        digit = '0'
+        mask = 1 << (i-1)
+        if (tileX & mask) != 0:
+            digit = ord(digit) + 1
+        if (tileY & mask) != 0:
+            digit = ord(digit) + 1
+            digit = ord(digit) + 1
+        quadKey.append(digit)
+        i -= 1
+    return str(''.join(quadKey))
 
 '''
     Converts a QuadKey into tile XY coordinates.
     quadKey = QuadKey of tile
     tileX = Tile X coordinate
     tileY = Tile Y coordinate
-    
-    
-    returns levelOfDetail 
-    
         
+    returns levelOfDetail         
 '''
 def quadKey2TileXY(quadKey):
+    tileX = 0
+    tileY = 0
+    levelOfDetail = len(quadKey)
+
+    i = levelOfDetail
+    while i > 0:
+        mask = 1 << (i-1)
+
+        if quadKey[levelOfDetail - i] == '0':
+            break
+        elif quadKey[levelOfDetail - i] == '1':
+            tileX = tileX | mask
+            break
+        elif quadKey[levelOfDetail - i] == '2':
+            tileY = tileY | mask
+            break
+        elif quadKey[levelOfDetail - i] == '3':
+            tileX = tileX | mask
+            tileY = tileY | mask
+            break
+        i -= 1
     pass
 
-k = 10<<2&int(math.pow(2,32)-1)
-print(10<<2 & (2**32)-1)
+k = 'hello'
+print(k[3])
