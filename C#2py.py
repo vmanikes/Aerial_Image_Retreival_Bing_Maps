@@ -140,3 +140,6 @@ def tileXY2QuadKey(tileX,tileY,levelOfDetail):
 '''
 def quadKey2TileXY(quadKey):
     pass
+
+k = 10<<2&int(math.pow(2,32)-1)
+print(10<<2 & (2**32)-1)
