@@ -153,23 +153,20 @@ def quadKey2TileXY(quadKey):
     levelOfDetail = len(quadKey)
 
     i = levelOfDetail
-    while i > 0:
-        mask = 1 << (i-1)
+    try:
+        while i > 0:
+            mask = 1 << (i-1)
+            if quadKey[levelOfDetail - i] == '1':
+                tileX = tileX | mask
+            elif quadKey[levelOfDetail - i] == '2':
+                tileY = tileY | mask
+            elif quadKey[levelOfDetail - i] == '3':
+                tileX = tileX | mask
+                tileY = tileY | mask
+            i -= 1
+    except:
+        print("Invalid quad key")
 
-        if quadKey[levelOfDetail - i] == '0':
-            break
-        elif quadKey[levelOfDetail - i] == '1':
-            tileX = tileX | mask
-            break
-        elif quadKey[levelOfDetail - i] == '2':
-            tileY = tileY | mask
-            break
-        elif quadKey[levelOfDetail - i] == '3':
-            tileX = tileX | mask
-            tileY = tileY | mask
-            break
-        i -= 1
+    return tileX,tileY
     pass
 
-k = 'hello'
-print(k[3])
