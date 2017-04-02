@@ -1,7 +1,7 @@
 import math
 import numpy as np
 import cv2
-import urllib
+import urllib.request
 
 
 
@@ -185,7 +185,7 @@ def quadKey2TileXY(quadKey):
 '''
 def get_image_from_quadkey(quadKey):
     url = "http://h0.ortho.tiles.virtualearth.net/tiles/h%s.jpeg?g=131" %(str(quadKey))
-    response = urllib.urlopen(url)
+    response = urllib.request.urlopen(url)
     image = np.asarray(bytearray(response.read()), dtype="uint8")
     image = cv2.imdecode(image, cv2.IMREAD_COLOR)
 
@@ -197,5 +197,8 @@ x,y = latLong2pixelXY(float(20.5937),float(78.9629),12)
 k = pixelXY2tileXY(x,y)
 
 m = tileXY2QuadKey(k[0],k[1],10)
+img = get_image_from_quadkey(m)
 
-print(m)
+cv2.imwrite("Error.jpeg",img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
