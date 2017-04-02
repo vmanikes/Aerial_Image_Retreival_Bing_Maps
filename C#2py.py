@@ -1,4 +1,9 @@
 import math
+import numpy as np
+import cv2
+import urllib
+
+
 
 EARTHRADIUS = 6378137
 MINLATITUDE = -85.05112878
@@ -36,7 +41,7 @@ def mapSize(levelOfDetail):
 '''
 def groundResolution(latitude,levelOfDetail):
     latitude = clip(latitude,MINLATITUDE,MAXLATITUDE)
-    return math.cos(latitude*math.pi/180) * 2 * math.pi * EARTHRADIUS/mapSize(levelOfDetail)
+    return np.cos(latitude*math.pi/180) * 2 * np.pi * EARTHRADIUS/mapSize(levelOfDetail)
 
 '''
     Determines the map scale at a specified latitude, level of detail, and screen resolution.
@@ -64,8 +69,8 @@ def latLong2pixelXY(latitude,longitude,levelOfDetail):
     longitude = clip(longitude,MINLONGITUDE,MAXLONGITUDE)
 
     x = (longitude + 180)/360.0
-    sinLatitude = math.sin(latitude*math.pi/180)
-    y = 0.5 - math.log((1 + sinLatitude) / (1 - sinLatitude))/(4*math.pi)
+    sinLatitude = np.sin(latitude*np.pi/180)
+    y = 0.5 - np.log((1 + sinLatitude) / (1 - sinLatitude))/(4*math.pi)
     mapSize1 = mapSize(levelOfDetail)
     pixelX = int(clip(x * mapSize1 + 0.5, 0, mapSize1 - 1))
     pixelY = int(clip(y * mapSize1 + 0.5, 0, mapSize1 - 1))
@@ -99,9 +104,9 @@ def pixelXY2LatLng(pixelX,pixelY,levelOfDetail):
    return tileX and tileY 
 '''
 def pixelXY2tileXY(pixelX,pixelY):
-    tileX = pixelX/256
-    tileY = pixelY/256
-    return tileX,tileY
+    tileX = np.floor(pixelX/256)
+    tileY = np.floor(pixelY/256)
+    return int(tileX),int(tileY)
 
 '''
     Converts tile XY coordinates into pixel XY coordinates of the upper-left pixel of the specified tile.
@@ -128,16 +133,18 @@ def tileXY2QuadKey(tileX,tileY,levelOfDetail):
     quadKey = []
     i = levelOfDetail
     while i > 0:
-        digit = '0'
+        digit = 0
         mask = 1 << (i-1)
         if (tileX & mask) != 0:
-            digit = ord(digit) + 1
+            digit = digit + 1
+            #digit = str(digit)
         if (tileY & mask) != 0:
-            digit = ord(digit) + 1
-            digit = ord(digit) + 1
-        quadKey.append(digit)
+            digit = digit + 1
+            digit = digit + 1
+            #digit = str(digit)
+        quadKey.append(str(digit))
         i -= 1
-    return str(''.join(quadKey))
+    return ''.join(quadKey)
 
 '''
     Converts a QuadKey into tile XY coordinates.
@@ -168,5 +175,27 @@ def quadKey2TileXY(quadKey):
         print("Invalid quad key")
 
     return tileX,tileY
-    pass
 
+'''
+    Given a quadkey we will get the image from the url
+    
+    
+    
+    CodeRef = http://www.pyimagesearch.com/2015/03/02/convert-url-to-image-with-python-and-opencv/
+'''
+def get_image_from_quadkey(quadKey):
+    url = "http://h0.ortho.tiles.virtualearth.net/tiles/h%s.jpeg?g=131" %(str(quadKey))
+    response = urllib.urlopen(url)
+    image = np.asarray(bytearray(response.read()), dtype="uint8")
+    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+
+    return image
+
+
+
+x,y = latLong2pixelXY(float(20.5937),float(78.9629),12)
+k = pixelXY2tileXY(x,y)
+
+m = tileXY2QuadKey(k[0],k[1],10)
+
+print(m)
