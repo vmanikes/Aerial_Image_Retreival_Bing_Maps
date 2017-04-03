@@ -1,4 +1,9 @@
 import math
+import numpy as np
+import cv2
+import urllib.request
+import sys
+
 
 EARTHRADIUS = 6378137
 MINLATITUDE = -85.05112878
@@ -25,7 +30,7 @@ def clip(n,minValue,maxValue):
     returns The map width and height in pixels.
 '''
 def mapSize(levelOfDetail):
-    pass
+    return 256 << levelOfDetail
 
 '''
     Determines the ground resolution (in meters per pixel) at a specified latitude and level of detail.
@@ -36,7 +41,7 @@ def mapSize(levelOfDetail):
 '''
 def groundResolution(latitude,levelOfDetail):
     latitude = clip(latitude,MINLATITUDE,MAXLATITUDE)
-    return math.cos(latitude*math.pi/180) * 2 * math.pi * EARTHRADIUS/mapSize(levelOfDetail)
+    return np.cos(latitude*math.pi/180) * 2 * np.pi * EARTHRADIUS/mapSize(levelOfDetail)
 
 '''
     Determines the map scale at a specified latitude, level of detail, and screen resolution.
@@ -64,8 +69,8 @@ def latLong2pixelXY(latitude,longitude,levelOfDetail):
     longitude = clip(longitude,MINLONGITUDE,MAXLONGITUDE)
 
     x = (longitude + 180)/360.0
-    sinLatitude = math.sin(latitude*math.pi/180)
-    y = 0.5 - math.log((1 + sinLatitude) / (1 - sinLatitude))/(4*math.pi)
+    sinLatitude = np.sin(latitude*np.pi/180)
+    y = 0.5 - np.log((1 + sinLatitude) / (1 - sinLatitude))/(4*math.pi)
     mapSize1 = mapSize(levelOfDetail)
     pixelX = int(clip(x * mapSize1 + 0.5, 0, mapSize1 - 1))
     pixelY = int(clip(y * mapSize1 + 0.5, 0, mapSize1 - 1))
@@ -99,9 +104,9 @@ def pixelXY2LatLng(pixelX,pixelY,levelOfDetail):
    return tileX and tileY 
 '''
 def pixelXY2tileXY(pixelX,pixelY):
-    tileX = pixelX/256
-    tileY = pixelY/256
-    return tileX,tileY
+    tileX = np.floor(pixelX/256)
+    tileY = np.floor(pixelY/256)
+    return int(tileX),int(tileY)
 
 '''
     Converts tile XY coordinates into pixel XY coordinates of the upper-left pixel of the specified tile.
@@ -125,18 +130,98 @@ def tileXY2PixelXY(tileX,tileY):
     returns a string containing the quad key
 '''
 def tileXY2QuadKey(tileX,tileY,levelOfDetail):
-    pass
+    quadKey = []
+    i = levelOfDetail
+    while i > 0:
+        digit = 0
+        mask = 1 << (i-1)
+        if (tileX & mask) != 0:
+            digit = digit + 1
+            #digit = str(digit)
+        if (tileY & mask) != 0:
+            digit = digit + 1
+            digit = digit + 1
+            #digit = str(digit)
+        quadKey.append(str(digit))
+        i -= 1
+    return ''.join(quadKey)
 
 '''
     Converts a QuadKey into tile XY coordinates.
     quadKey = QuadKey of tile
     tileX = Tile X coordinate
     tileY = Tile Y coordinate
-    
-    
-    returns levelOfDetail 
-    
         
+    returns levelOfDetail         
 '''
 def quadKey2TileXY(quadKey):
-    pass
+    tileX = 0
+    tileY = 0
+    levelOfDetail = len(quadKey)
+
+    i = levelOfDetail
+    try:
+        while i > 0:
+            mask = 1 << (i-1)
+            if quadKey[levelOfDetail - i] == '1':
+                tileX = tileX | mask
+            elif quadKey[levelOfDetail - i] == '2':
+                tileY = tileY | mask
+            elif quadKey[levelOfDetail - i] == '3':
+                tileX = tileX | mask
+                tileY = tileY | mask
+            i -= 1
+    except:
+        print("Invalid quad key")
+
+    return tileX,tileY
+
+'''
+    Given a quadkey we will get the image from the url
+    
+    
+    
+    CodeRef = http://www.pyimagesearch.com/2015/03/02/convert-url-to-image-with-python-and-opencv/
+'''
+def get_image_from_quadkey(quadKey):
+    url = "http://h0.ortho.tiles.virtualearth.net/tiles/h%s.jpeg?g=131" %(str(quadKey))
+    response = urllib.request.urlopen(url)
+    image = np.asarray(bytearray(response.read()), dtype="uint8")
+    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+
+    return image
+
+#
+# args = sys.argv
+# if len(args) < 4:
+#     print("USAGE: python Retrive_aerial.py lat1 lng1 lat2 lng2")
+#     exit(1)
+
+i = 23
+
+while i > 0:
+    start_PixelX,start_PixelY = latLong2pixelXY(float(41.882692),float(-87.623332),i)
+    end_PixelX,end_PixelY = latLong2pixelXY(float(41.883692),float(-87.625332),i)
+
+    start_TileX, start_TileY = pixelXY2tileXY(start_PixelX,start_PixelY)
+    end_TileX, end_TileY = pixelXY2tileXY(end_PixelX,end_PixelY)
+
+    min_start_tile = min((start_TileX,start_TileY),(end_TileX,end_TileY))
+    max_end_tile = max((start_TileX,start_TileY),(end_TileX,end_TileY))
+
+    tile_list = []
+    for j in range(min_start_tile[0],max_end_tile[0] + 1):
+        for k in range(min_start_tile[1],max_end_tile[1] + 1):
+            tile_list.append((j,k))
+
+    print(tile_list)
+    i = i - 1
+#
+# k = pixelXY2tileXY(lat1,lng1)
+# #
+# m = tileXY2QuadKey(k[0],k[1],23)
+# img = get_image_from_quadkey(m)
+#
+# cv2.imshow("kc",img)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
