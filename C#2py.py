@@ -2,7 +2,7 @@ import math
 import numpy as np
 import cv2
 import urllib.request
-
+import sys
 
 
 EARTHRADIUS = 6378137
@@ -191,14 +191,37 @@ def get_image_from_quadkey(quadKey):
 
     return image
 
+#
+# args = sys.argv
+# if len(args) < 4:
+#     print("USAGE: python Retrive_aerial.py lat1 lng1 lat2 lng2")
+#     exit(1)
 
+i = 23
 
-x,y = latLong2pixelXY(float(20.5937),float(78.9629),12)
-k = pixelXY2tileXY(x,y)
+while i > 0:
+    start_PixelX,start_PixelY = latLong2pixelXY(float(41.882692),float(-87.623332),i)
+    end_PixelX,end_PixelY = latLong2pixelXY(float(41.883692),float(-87.625332),i)
 
-m = tileXY2QuadKey(k[0],k[1],10)
-img = get_image_from_quadkey(m)
+    start_TileX, start_TileY = pixelXY2tileXY(start_PixelX,start_PixelY)
+    end_TileX, end_TileY = pixelXY2tileXY(end_PixelX,end_PixelY)
 
-cv2.imwrite("Error.jpeg",img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+    min_start_tile = min((start_TileX,start_TileY),(end_TileX,end_TileY))
+    max_end_tile = max((start_TileX,start_TileY),(end_TileX,end_TileY))
+
+    tile_list = []
+    for j in range(min_start_tile[0],max_end_tile[0] + 1):
+        for k in range(min_start_tile[1],max_end_tile[1] + 1):
+            tile_list.append((j,k))
+
+    print(tile_list)
+    i = i - 1
+#
+# k = pixelXY2tileXY(lat1,lng1)
+# #
+# m = tileXY2QuadKey(k[0],k[1],23)
+# img = get_image_from_quadkey(m)
+#
+# cv2.imshow("kc",img)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
