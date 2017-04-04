@@ -197,31 +197,87 @@ def get_image_from_quadkey(quadKey):
 #     print("USAGE: python Retrive_aerial.py lat1 lng1 lat2 lng2")
 #     exit(1)
 
-i = 23
+initialZoomLevel = 23
+error = np.array(cv2.imread('error.jpeg'))
+tile_2d = []
+tile_dict = {}
+while initialZoomLevel > 0:
+    start_PixelX, start_PixelY = latLong2pixelXY(float(41.882692), float(-87.623332), initialZoomLevel)
+    end_PixelX, end_PixelY = latLong2pixelXY(float(41.883692), float(-87.625332), initialZoomLevel)
 
-while i > 0:
-    start_PixelX,start_PixelY = latLong2pixelXY(float(41.882692),float(-87.623332),i)
-    end_PixelX,end_PixelY = latLong2pixelXY(float(41.883692),float(-87.625332),i)
+    start_TileX, start_TileY = pixelXY2tileXY(start_PixelX, start_PixelY)
+    end_TileX, end_TileY = pixelXY2tileXY(end_PixelX, end_PixelY)
 
-    start_TileX, start_TileY = pixelXY2tileXY(start_PixelX,start_PixelY)
-    end_TileX, end_TileY = pixelXY2tileXY(end_PixelX,end_PixelY)
+    min_start_tile = min((start_TileX, start_TileY), (end_TileX, end_TileY))
+    max_end_tile = max((start_TileX, start_TileY), (end_TileX, end_TileY))
 
-    min_start_tile = min((start_TileX,start_TileY),(end_TileX,end_TileY))
-    max_end_tile = max((start_TileX,start_TileY),(end_TileX,end_TileY))
+    quadKey = tileXY2QuadKey(min_start_tile[0], min_start_tile[1], initialZoomLevel)
+    img = get_image_from_quadkey(quadKey)
 
-    tile_list = []
-    for j in range(min_start_tile[0],max_end_tile[0] + 1):
-        for k in range(min_start_tile[1],max_end_tile[1] + 1):
-            tile_list.append((j,k))
+    cv2.imwrite('sample.jpeg',img)
+    sample = np.array(cv2.imread('sample.jpeg'))
 
-    print(tile_list)
-    i = i - 1
+    if error.shape == sample.shape and not(np.bitwise_xor(error,sample).any()):
+        initialZoomLevel -= 1
+        continue
+    else:
+        startTileZoomLevel = initialZoomLevel
+        tile_dict[min_start_tile] = startTileZoomLevel
+        for j in range(min_start_tile[0], max_end_tile[0] + 1):
+            tile_list = []
+            for k in range(min_start_tile[1], max_end_tile[1] + 1):
+                tile_list.append((j, k))
+            tile_2d.append(tile_list)
+
+        break
+
+print(tile_2d)
+
+
+
+
+
+# while i > 0:
+#     start_PixelX,start_PixelY = latLong2pixelXY(float(41.882692),float(-87.623332),i)
+#     end_PixelX,end_PixelY = latLong2pixelXY(float(41.883692),float(-87.625332),i)
 #
-# k = pixelXY2tileXY(lat1,lng1)
-# #
-# m = tileXY2QuadKey(k[0],k[1],23)
+#     start_TileX, start_TileY = pixelXY2tileXY(start_PixelX,start_PixelY)
+#     end_TileX, end_TileY = pixelXY2tileXY(end_PixelX,end_PixelY)
+#
+#     min_start_tile = min((start_TileX,start_TileY),(end_TileX,end_TileY))
+#     max_end_tile = max((start_TileX,start_TileY),(end_TileX,end_TileY))
+#
+#     quadKey = tileXY2QuadKey(min_start_tile[0],min_start_tile[1],i)
+#     img = get_image_from_quadkey(quadKey)
+#
+#     cv2.imshow("kc",img)
+#     cv2.waitKey(0)
+#     cv2.destroyAllWindows()
+#
+#
+#     i = i-1
+
+    #
+    #
+    # tile_list = []
+    # for j in range(min_start_tile[0],max_end_tile[0] + 1):
+    #     for k in range(min_start_tile[1],max_end_tile[1] + 1):
+    #         tile_list.append((j,k))
+    #
+    # print(tile_list)
+    # i = i - 1
+
+
+# start_PixelX,start_PixelY = latLong2pixelXY(float(41.882692),float(-87.623332),14)
+# k1 = pixelXY2tileXY(start_PixelX,start_PixelY)
+# m = tileXY2QuadKey(k1[0],k1[1],14)
+#
 # img = get_image_from_quadkey(m)
+# l = cv2.imwrite("img.jpeg",img)
 #
-# cv2.imshow("kc",img)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
+# l1 = cv2.imread('img.jpeg')
+# k = cv2.imread('error.jpeg')
+# print(k)
+#
+# print('--------')
+# print(l1)
