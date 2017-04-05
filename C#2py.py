@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import urllib.request
 import sys
-
+from collections import OrderedDict
 
 EARTHRADIUS = 6378137
 MINLATITUDE = -85.05112878
@@ -191,6 +191,25 @@ def get_image_from_quadkey(quadKey):
 
     return image
 
+def add_zoom_to_tiles(dummy_tiles,startTileZoomLevel):
+
+    for tile in dummy_tiles:
+        temp = startTileZoomLevel
+        while temp > 0:
+            temp_quadKey = tileXY2QuadKey(tile[0],tile[1],temp)
+            temp_img = get_image_from_quadkey(temp_quadKey)
+            cv2.imwrite('sample.jpeg',temp_img)
+            sample = np.array(cv2.imread('sample.jpeg'))
+            if error.shape == sample.shape and not (np.bitwise_xor(error, sample).any()):
+                temp -= 1
+                continue
+            else:
+                startTileZoomLevel = temp
+                tile_dict[tile] = temp
+
+                break
+
+
 #
 # args = sys.argv
 # if len(args) < 4:
@@ -200,7 +219,10 @@ def get_image_from_quadkey(quadKey):
 initialZoomLevel = 23
 error = np.array(cv2.imread('error.jpeg'))
 tile_2d = []
-tile_dict = {}
+dummy_tiles = []
+tile_dict = OrderedDict()
+
+
 while initialZoomLevel > 0:
     start_PixelX, start_PixelY = latLong2pixelXY(float(41.882692), float(-87.623332), initialZoomLevel)
     end_PixelX, end_PixelY = latLong2pixelXY(float(41.883692), float(-87.625332), initialZoomLevel)
@@ -227,57 +249,15 @@ while initialZoomLevel > 0:
             tile_list = []
             for k in range(min_start_tile[1], max_end_tile[1] + 1):
                 tile_list.append((j, k))
+                dummy_tiles.append((j,k))
             tile_2d.append(tile_list)
 
         break
 
-print(tile_2d)
+add_zoom_to_tiles(dummy_tiles,startTileZoomLevel)
+min_zoom_level = min(tile_dict.values())
 
+for key,value in tile_dict.items():
+    tile_dict[key] = min_zoom_level
 
-
-
-
-# while i > 0:
-#     start_PixelX,start_PixelY = latLong2pixelXY(float(41.882692),float(-87.623332),i)
-#     end_PixelX,end_PixelY = latLong2pixelXY(float(41.883692),float(-87.625332),i)
-#
-#     start_TileX, start_TileY = pixelXY2tileXY(start_PixelX,start_PixelY)
-#     end_TileX, end_TileY = pixelXY2tileXY(end_PixelX,end_PixelY)
-#
-#     min_start_tile = min((start_TileX,start_TileY),(end_TileX,end_TileY))
-#     max_end_tile = max((start_TileX,start_TileY),(end_TileX,end_TileY))
-#
-#     quadKey = tileXY2QuadKey(min_start_tile[0],min_start_tile[1],i)
-#     img = get_image_from_quadkey(quadKey)
-#
-#     cv2.imshow("kc",img)
-#     cv2.waitKey(0)
-#     cv2.destroyAllWindows()
-#
-#
-#     i = i-1
-
-    #
-    #
-    # tile_list = []
-    # for j in range(min_start_tile[0],max_end_tile[0] + 1):
-    #     for k in range(min_start_tile[1],max_end_tile[1] + 1):
-    #         tile_list.append((j,k))
-    #
-    # print(tile_list)
-    # i = i - 1
-
-
-# start_PixelX,start_PixelY = latLong2pixelXY(float(41.882692),float(-87.623332),14)
-# k1 = pixelXY2tileXY(start_PixelX,start_PixelY)
-# m = tileXY2QuadKey(k1[0],k1[1],14)
-#
-# img = get_image_from_quadkey(m)
-# l = cv2.imwrite("img.jpeg",img)
-#
-# l1 = cv2.imread('img.jpeg')
-# k = cv2.imread('error.jpeg')
-# print(k)
-#
-# print('--------')
-# print(l1)
+print(tile_dict)
