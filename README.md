@@ -1,6 +1,7 @@
 # Aerial_Image_Retreival_Bing_Maps
 
-Converted the C# code to python except for 3 functions
+Run using the command 
 
-Refer this for details:
-https://msdn.microsoft.com/en-us/library/bb259689.aspx
+`python Retrive_aerial.py 41.806440 -87.588199 41.804812 -87.583752`
+
+The result is stored in the Result directory

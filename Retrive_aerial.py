@@ -5,6 +5,8 @@ import urllib.request
 import sys
 from collections import OrderedDict
 
+
+
 EARTHRADIUS = 6378137
 MINLATITUDE = -85.05112878
 MAXLATITUDE = 85.05112878
@@ -247,6 +249,8 @@ if len(args) < 4 or len(args) > 5:
     print("USAGE: python Retrive_aerial.py lat1 lng1 lat2 lng2")
     exit(1)
 
+print("Hang tight while we retrieve the image for you")
+
 initialZoomLevel = 23
 error = np.array(cv2.imread('error.jpeg'))
 tile_2d = []
@@ -311,3 +315,5 @@ img_Final = cv2.imread('final.jpeg')
 
 kc = cv2.resize(img_Final, (1000, 750))
 cv2.imwrite('Result/Final.jpeg', kc)
+
+print("Image is in the Result directory....")
