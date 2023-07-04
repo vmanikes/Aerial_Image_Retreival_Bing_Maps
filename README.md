@@ -1,12 +1,8 @@
 # Aerial_Image_Retreival_Bing_Maps
 
-Application to retrieve the high resolution images of a certain range covered by 2 pairs of latitude and longitude using the Bing Map API.
+Run using the command 
+=======
 
-Run this code using:
+`python Retrive_aerial.py 41.806440 -87.588199 41.804812 -87.583752`
 
-
-
-'python Retrive_aerial.py lat1 lng1 lat2 lng2'
-
-Refer this for details:
-https://msdn.microsoft.com/en-us/library/bb259689.aspx
+The result is stored in the Result directory
